@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import selector
 
 from .const import (
     DOMAIN,
@@ -18,10 +19,12 @@ from .const import (
     CONF_USERNAME,
     CONF_PASSWORD,
     CONF_RELAY_COUNT,
+    CONF_BUTTON_COUNT,
     DEFAULT_SUBPATH,
     DEFAULT_USERNAME,
     DEFAULT_PASSWORD,
     DEFAULT_RELAY_COUNT,
+    DEFAULT_BUTTON_COUNT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,9 +38,17 @@ def validate_subpath(subpath: str) -> str:
     # Remove leading and trailing slashes
     subpath = subpath.strip("/")
     
-    # Check for valid characters (alphanumeric, dash, underscore)
-    if not re.match(r"^[a-zA-Z0-9_-]+$", subpath):
-        raise ValueError("Subpath can only contain letters, numbers, dashes, and underscores")
+    # Check for valid characters (alphanumeric, dash, underscore, forward slash for nested paths)
+    if not re.match(r"^[a-zA-Z0-9_/-]+$", subpath):
+        raise ValueError("Subpath can only contain letters, numbers, dashes, underscores, and forward slashes")
+    
+    # Ensure no double slashes
+    if "//" in subpath:
+        raise ValueError("Subpath cannot contain consecutive slashes")
+    
+    # Ensure doesn't start or end with slash
+    if subpath.startswith("/") or subpath.endswith("/"):
+        raise ValueError("Subpath cannot start or end with a slash")
     
     if not subpath:
         raise ValueError("Subpath cannot be empty")
@@ -76,6 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             CONF_SUBPATH: subpath,
                             CONF_USERNAME: user_input[CONF_USERNAME],
                             CONF_RELAY_COUNT: user_input[CONF_RELAY_COUNT],
+                            CONF_BUTTON_COUNT: user_input[CONF_BUTTON_COUNT],
                         },
                         options={
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
@@ -94,8 +106,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_SUBPATH, default=DEFAULT_SUBPATH): str,
                 vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
                 vol.Required(CONF_PASSWORD, default=DEFAULT_PASSWORD): str,
-                vol.Required(CONF_RELAY_COUNT, default=DEFAULT_RELAY_COUNT): vol.All(
-                    vol.Coerce(int), vol.Range(min=1, max=8)
+                vol.Required(CONF_RELAY_COUNT, default=DEFAULT_RELAY_COUNT): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=16,
+                        mode=selector.NumberSelectorMode.BOX,
+                    )
+                ),
+                vol.Required(CONF_BUTTON_COUNT, default=DEFAULT_BUTTON_COUNT): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=16,
+                        mode=selector.NumberSelectorMode.BOX,
+                    )
                 ),
             }
         )

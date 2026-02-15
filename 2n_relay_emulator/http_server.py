@@ -16,6 +16,7 @@ from .const import (
     CONF_USERNAME,
     CONF_PASSWORD,
     CONF_RELAY_COUNT,
+    CONF_BUTTON_COUNT,
     HTTP_SERVER_KEY,
 )
 
@@ -160,12 +161,14 @@ class TwoNRelayView(HomeAssistantView):
         username: str,
         password: str,
         relay_count: int,
+        button_count: int,
     ):
         """Initialize the view."""
         self.hass = hass
         self.entry = entry
         self.subpath = subpath.rstrip("/")
         self.relay_count = relay_count
+        self.button_count = button_count
         self.auth = DigestAuth(username, password)
         
         # Set the URL and name for this view
@@ -228,9 +231,17 @@ class TwoNRelayView(HomeAssistantView):
         if path_lower in ("api/relay/ctrl", "relay/ctrl"):
             return await self.handle_relay_control(request)
         
+        # Button trigger endpoints
+        if path_lower in ("api/button/trigger", "button/trigger"):
+            return await self.handle_button_trigger(request)
+        
         # Relay status endpoints
         if path_lower in ("api/relay/status", "relay/status"):
             return await self.handle_relay_status(request)
+        
+        # Button status endpoints
+        if path_lower in ("api/button/status", "button/status"):
+            return await self.handle_button_status(request)
         
         # System info
         if path_lower == "api/system/info":
@@ -339,6 +350,77 @@ class TwoNRelayView(HomeAssistantView):
             _LOGGER.error("Failed to get relay status: %s", err)
             return web.Response(status=500, text=f"Error: {err}")
 
+    async def handle_button_trigger(self, request: web.Request) -> web.Response:
+        """
+        Handle button trigger requests.
+        
+        2N compatible endpoints:
+        - /{subpath}/api/button/trigger?button=X
+        - /{subpath}/button/trigger?button=X
+        """
+        try:
+            button = int(request.query.get("button", 1))
+
+            if button < 1 or button > self.button_count:
+                return web.Response(
+                    status=400,
+                    text=f"Invalid button number. Must be between 1 and {self.button_count}",
+                )
+
+            # Find the corresponding button entity
+            unique_id = f"{self.entry.entry_id}_button_{button}"
+            
+            # Trigger the button by calling button.press service
+            entity_id = f"button.2n_relay_{self.entry.entry_id[:8]}_button_{button}"
+            
+            try:
+                await self.hass.services.async_call(
+                    "button",
+                    "press",
+                    {"entity_id": entity_id},
+                    blocking=True,
+                )
+                
+                _LOGGER.info(
+                    "Button %d triggered via HTTP request from %s",
+                    button,
+                    request.remote,
+                )
+                
+                return web.Response(
+                    status=200,
+                    text=f"OK\nButton {button} triggered",
+                    content_type="text/plain",
+                )
+            except Exception as err:
+                _LOGGER.error("Failed to trigger button %d: %s", button, err)
+                return web.Response(status=500, text=f"Error: {err}")
+
+        except ValueError:
+            return web.Response(status=400, text="Invalid button parameter")
+
+    async def handle_button_status(self, request: web.Request) -> web.Response:
+        """
+        Handle button status requests.
+        
+        2N compatible endpoints:
+        - /{subpath}/api/button/status
+        - /{subpath}/button/status
+        
+        Returns list of available buttons.
+        """
+        try:
+            status_lines = []
+            for button_num in range(1, self.button_count + 1):
+                status_lines.append(f"button{button_num}=available")
+
+            response_text = "\n".join(status_lines) if status_lines else "No buttons configured"
+            return web.Response(status=200, text=response_text, content_type="text/plain")
+
+        except Exception as err:
+            _LOGGER.error("Failed to get button status: %s", err)
+            return web.Response(status=500, text=f"Error: {err}")
+
     async def handle_system_info(self, request: web.Request) -> web.Response:
         """
         Handle system info requests (2N compatible).
@@ -347,8 +429,9 @@ class TwoNRelayView(HomeAssistantView):
         """
         info = {
             "model": "2N IP Relay Emulator",
-            "version": "1.0.0",
+            "version": "2.0.0",
             "relays": self.relay_count,
+            "buttons": self.button_count,
         }
         
         response_text = "\n".join([f"{k}={v}" for k, v in info.items()])
@@ -370,8 +453,9 @@ async def setup_http_server(hass: HomeAssistant, entry: ConfigEntry):
     # Retrieve password from options (can be encrypted by HA)
     password = entry.options.get(CONF_PASSWORD, entry.data.get(CONF_PASSWORD, "2n"))
     relay_count = entry.data[CONF_RELAY_COUNT]
+    button_count = entry.data.get(CONF_BUTTON_COUNT, 0)
 
-    view = TwoNRelayView(hass, entry, subpath, username, password, relay_count)
+    view = TwoNRelayView(hass, entry, subpath, username, password, relay_count, button_count)
     hass.http.register_view(view)
 
     # Store view instance for cleanup
@@ -380,9 +464,10 @@ async def setup_http_server(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][HTTP_SERVER_KEY][entry.entry_id] = view
 
     _LOGGER.info(
-        "2N Relay Emulator registered on subpath '/%s' with %d relays",
+        "2N Relay Emulator registered on subpath '/%s' with %d relays and %d buttons",
         subpath,
         relay_count,
+        button_count,
     )
 
 
