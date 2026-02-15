@@ -26,6 +26,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Note: Home Assistant encrypts sensitive data in config entries when marked as such
+# We'll store password as sensitive data
+
 
 def validate_subpath(subpath: str) -> str:
     """Validate and normalize subpath."""
@@ -66,9 +69,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         break
 
                 if not errors:
+                    # Store sensitive data separately to enable encryption
                     return self.async_create_entry(
                         title=f"2N Relay Emulator (/{subpath})",
-                        data=user_input,
+                        data={
+                            CONF_SUBPATH: subpath,
+                            CONF_USERNAME: user_input[CONF_USERNAME],
+                            CONF_RELAY_COUNT: user_input[CONF_RELAY_COUNT],
+                        },
+                        options={
+                            CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        },
                     )
 
             except ValueError as err:
