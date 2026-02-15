@@ -28,7 +28,7 @@
     "step": {
       "init": {
         "title": "Reconfigure 2N IP Relay Emulator",
-        "description": "Update the configuration for this instance. Note: Changing relay/button counts will add or remove entities. The integration will reload automatically.\n\nCurrent configuration:\n- Subpath: {current_subpath}\n- Relays: {current_relay_count}\n- Buttons: {current_button_count}",
+        "description": "Update the configuration for this instance. The integration will reload automatically after saving.",
         "data": {
           "subpath": "URL Subpath",
           "username": "Username (for Digest Auth)",
@@ -37,7 +37,7 @@
           "button_count": "Number of Buttons"
         },
         "data_description": {
-          "subpath": "Change the URL path. Warning: Update your 2N device configurations after changing this!",
+          "subpath": "Change the URL path. Update your 2N device configurations after changing this.",
           "username": "Change the digest authentication username",
           "password": "Change the digest authentication password",
           "relay_count": "Add or remove relays. Entities will be created/removed automatically.",

@@ -209,9 +209,4 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={
-                "current_subpath": current_subpath,
-                "current_relay_count": str(current_relay_count),
-                "current_button_count": str(current_button_count),
-            },
         )
