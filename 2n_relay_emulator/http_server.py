@@ -429,7 +429,7 @@ class TwoNRelayView(HomeAssistantView):
         """
         info = {
             "model": "2N IP Relay Emulator",
-            "version": "2.0.0",
+            "version": "2.1.0",
             "relays": self.relay_count,
             "buttons": self.button_count,
         }

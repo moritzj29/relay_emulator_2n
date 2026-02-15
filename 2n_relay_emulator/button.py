@@ -53,7 +53,7 @@ class RelayButton(ButtonEntity):
             name=f"2N Relay Emulator (/{entry.data['subpath']})",
             manufacturer="Home Assistant",
             model="2N IP Relay Emulator",
-            sw_version="2.0.0",
+            sw_version="2.1.0",
         )
 
     @property

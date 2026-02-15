@@ -23,5 +23,32 @@
       "invalid_subpath": "Invalid subpath. Use only letters, numbers, dashes, underscores, and forward slashes. No consecutive slashes allowed.",
       "unknown": "Unexpected error occurred"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Reconfigure 2N IP Relay Emulator",
+        "description": "Update the configuration for this instance. Note: Changing relay/button counts will add or remove entities. The integration will reload automatically.\n\nCurrent configuration:\n- Subpath: {current_subpath}\n- Relays: {current_relay_count}\n- Buttons: {current_button_count}",
+        "data": {
+          "subpath": "URL Subpath",
+          "username": "Username (for Digest Auth)",
+          "password": "Password (for Digest Auth)",
+          "relay_count": "Number of Relays (Switches)",
+          "button_count": "Number of Buttons"
+        },
+        "data_description": {
+          "subpath": "Change the URL path. Warning: Update your 2N device configurations after changing this!",
+          "username": "Change the digest authentication username",
+          "password": "Change the digest authentication password",
+          "relay_count": "Add or remove relays. Entities will be created/removed automatically.",
+          "button_count": "Add or remove buttons. Entities will be created/removed automatically."
+        }
+      }
+    },
+    "error": {
+      "subpath_in_use": "This subpath is already used by another 2N Relay Emulator instance",
+      "invalid_subpath": "Invalid subpath. Use only letters, numbers, dashes, underscores, and forward slashes. No consecutive slashes allowed.",
+      "unknown": "Unexpected error occurred"
+    }
   }
 }
