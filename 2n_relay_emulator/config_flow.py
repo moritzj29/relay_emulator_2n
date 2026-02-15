@@ -11,7 +11,6 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import selector
 
 from .const import (
     DOMAIN,
@@ -106,19 +105,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_SUBPATH, default=DEFAULT_SUBPATH): str,
                 vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
                 vol.Required(CONF_PASSWORD, default=DEFAULT_PASSWORD): str,
-                vol.Required(CONF_RELAY_COUNT, default=DEFAULT_RELAY_COUNT): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0,
-                        max=16,
-                        mode=selector.NumberSelectorMode.BOX,
-                    )
+                vol.Required(CONF_RELAY_COUNT, default=DEFAULT_RELAY_COUNT): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=16)
                 ),
-                vol.Required(CONF_BUTTON_COUNT, default=DEFAULT_BUTTON_COUNT): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0,
-                        max=16,
-                        mode=selector.NumberSelectorMode.BOX,
-                    )
+                vol.Required(CONF_BUTTON_COUNT, default=DEFAULT_BUTTON_COUNT): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=16)
                 ),
             }
         )
@@ -205,19 +196,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(CONF_SUBPATH, default=current_subpath): str,
                 vol.Required(CONF_USERNAME, default=current_username): str,
                 vol.Required(CONF_PASSWORD, default=current_password): str,
-                vol.Required(CONF_RELAY_COUNT, default=current_relay_count): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0,
-                        max=16,
-                        mode=selector.NumberSelectorMode.BOX,
-                    )
+                vol.Required(CONF_RELAY_COUNT, default=current_relay_count): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=16)
                 ),
-                vol.Required(CONF_BUTTON_COUNT, default=current_button_count): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0,
-                        max=16,
-                        mode=selector.NumberSelectorMode.BOX,
-                    )
+                vol.Required(CONF_BUTTON_COUNT, default=current_button_count): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=16)
                 ),
             }
         )

@@ -21,13 +21,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 2N Relay switches from a config entry."""
-    relay_count = entry.data[CONF_RELAY_COUNT]
+    relay_count = entry.data.get(CONF_RELAY_COUNT, 0)
 
-    entities = []
-    for relay_num in range(1, relay_count + 1):
-        entities.append(RelaySwitch(entry, relay_num))
+    if relay_count > 0:
+        entities = []
+        for relay_num in range(1, relay_count + 1):
+            entities.append(RelaySwitch(entry, relay_num))
 
-    async_add_entities(entities)
+        async_add_entities(entities)
 
 
 class RelaySwitch(SwitchEntity):
