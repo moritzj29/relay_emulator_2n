@@ -1,4 +1,4 @@
-"""Config flow for 2N Relay Emulator integration."""
+"""Config flow for IP Relay Emulator for 2N integration."""
 from __future__ import annotations
 
 import logging
@@ -49,7 +49,7 @@ def validate_subpath(subpath: str) -> str:
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for 2N Relay Emulator."""
+    """Handle a config flow for IP Relay Emulator for 2N."""
 
     VERSION = 1
 
@@ -75,7 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     button_count = int(user_input[CONF_BUTTON_COUNT])
                     
                     return self.async_create_entry(
-                        title=f"2N Relay Emulator (/{subpath})",
+                        title=f"IP Relay Emulator for 2N (/{subpath})",
                         data={
                             CONF_SUBPATH: subpath,
                             CONF_USERNAME: user_input[CONF_USERNAME],
@@ -130,7 +130,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle options flow for 2N Relay Emulator."""
+    """Handle options flow for IP Relay Emulator for 2N."""
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""

@@ -20,7 +20,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up 2N Relay buttons from a config entry."""
+    """Set up buttons from a config entry."""
     button_count = int(entry.data.get(CONF_BUTTON_COUNT, 0))
 
     if button_count > 0:
@@ -32,7 +32,7 @@ async def async_setup_entry(
 
 
 class RelayButton(ButtonEntity):
-    """Representation of a 2N relay button (momentary trigger)."""
+    """Representation of a button (momentary trigger)."""
 
     _attr_has_entity_name = True
 
@@ -50,9 +50,9 @@ class RelayButton(ButtonEntity):
         # Device info
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name=f"2N Relay Emulator (/{entry.data['subpath']})",
+            name=f"IP Relay Emulator for 2N (/{entry.data['subpath']})",
             manufacturer="Home Assistant",
-            model="2N IP Relay Emulator",
+            model="IP Relay Emulator for 2N",
             sw_version="2.1.0",
         )
 

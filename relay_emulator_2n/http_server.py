@@ -428,7 +428,7 @@ class TwoNRelayView(HomeAssistantView):
         Endpoint: /{subpath}/api/system/info
         """
         info = {
-            "model": "2N IP Relay Emulator",
+            "model": "IP Relay Emulator for 2N",
             "version": "2.1.0",
             "relays": self.relay_count,
             "buttons": self.button_count,
@@ -441,7 +441,7 @@ class TwoNRelayView(HomeAssistantView):
         """Handle root endpoint."""
         return web.Response(
             status=200,
-            text="2N IP Relay Emulator - Home Assistant Integration",
+            text="IP Relay Emulator for 2N - Home Assistant Integration",
             content_type="text/plain",
         )
 

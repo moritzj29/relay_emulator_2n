@@ -1,6 +1,6 @@
-"""Constants for the 2N Relay Emulator integration."""
+"""Constants for the IP Relay Emulator for 2N integration."""
 
-DOMAIN = "2n_relay_emulator"
+DOMAIN = "relay_emulator_2n"
 
 # Configuration keys
 CONF_SUBPATH = "subpath"

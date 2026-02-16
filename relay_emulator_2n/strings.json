@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "2N IP Relay Emulator Setup",
-        "description": "Configure the HTTP endpoints that emulate a 2N IP relay. This will create virtual relays (switches) and buttons accessible via Home Assistant's web server on a dedicated subpath (e.g., http://homeassistant.local:8123/2n-relay or http://homeassistant.local:8123/2n/door1 for nested paths).",
+        "title": "IP Relay Emulator for 2N Setup",
+        "description": "Configure the HTTP endpoints that emulate an IP relay. This will create virtual relays (switches) and buttons accessible via Home Assistant's web server on a dedicated subpath (e.g., http://homeassistant.local:8123/2n-relay or http://homeassistant.local:8123/2n/door1 for nested paths).",
         "data": {
           "subpath": "URL Subpath (e.g., '2n-relay' or '2n/door1')",
           "username": "Username (for Digest Auth)",
@@ -19,7 +19,7 @@
       }
     },
     "error": {
-      "subpath_in_use": "This subpath is already used by another 2N Relay Emulator instance",
+      "subpath_in_use": "This subpath is already used by another IP Relay Emulator for 2N instance",
       "invalid_subpath": "Invalid subpath. Use only letters, numbers, dashes, underscores, and forward slashes. No consecutive slashes allowed.",
       "unknown": "Unexpected error occurred"
     }
@@ -27,7 +27,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Reconfigure 2N IP Relay Emulator",
+        "title": "Reconfigure IP Relay Emulator for 2N",
         "description": "Update the configuration for this instance. The integration will reload automatically after saving.",
         "data": {
           "subpath": "URL Subpath",
@@ -46,7 +46,7 @@
       }
     },
     "error": {
-      "subpath_in_use": "This subpath is already used by another 2N Relay Emulator instance",
+      "subpath_in_use": "This subpath is already used by another IP Relay Emulator for 2N instance",
       "invalid_subpath": "Invalid subpath. Use only letters, numbers, dashes, underscores, and forward slashes. No consecutive slashes allowed.",
       "unknown": "Unexpected error occurred"
     }
