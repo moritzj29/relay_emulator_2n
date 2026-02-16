@@ -70,13 +70,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         break
 
                 if not errors:
+                    # Convert to int to handle float from NumberSelector
+                    relay_count = int(user_input[CONF_RELAY_COUNT])
+                    button_count = int(user_input[CONF_BUTTON_COUNT])
+                    
                     return self.async_create_entry(
                         title=f"2N Relay Emulator (/{subpath})",
                         data={
                             CONF_SUBPATH: subpath,
                             CONF_USERNAME: user_input[CONF_USERNAME],
-                            CONF_RELAY_COUNT: user_input[CONF_RELAY_COUNT],
-                            CONF_BUTTON_COUNT: user_input[CONF_BUTTON_COUNT],
+                            CONF_RELAY_COUNT: relay_count,
+                            CONF_BUTTON_COUNT: button_count,
                         },
                         options={
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
@@ -122,7 +126,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -131,14 +135,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
+            # Convert to int to handle float from NumberSelector
+            relay_count = int(user_input[CONF_RELAY_COUNT])
+            button_count = int(user_input[CONF_BUTTON_COUNT])
+            
             # Update the entry
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
                 data={
                     CONF_SUBPATH: user_input[CONF_SUBPATH],
                     CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_RELAY_COUNT: user_input[CONF_RELAY_COUNT],
-                    CONF_BUTTON_COUNT: user_input[CONF_BUTTON_COUNT],
+                    CONF_RELAY_COUNT: relay_count,
+                    CONF_BUTTON_COUNT: button_count,
                 },
                 options={
                     CONF_PASSWORD: user_input[CONF_PASSWORD],

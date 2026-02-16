@@ -21,7 +21,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 2N Relay buttons from a config entry."""
-    button_count = entry.data.get(CONF_BUTTON_COUNT, 0)
+    button_count = int(entry.data.get(CONF_BUTTON_COUNT, 0))
 
     if button_count > 0:
         entities = []

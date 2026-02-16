@@ -452,8 +452,8 @@ async def setup_http_server(hass: HomeAssistant, entry: ConfigEntry):
     username = entry.data[CONF_USERNAME]
     # Retrieve password from options (can be encrypted by HA)
     password = entry.options.get(CONF_PASSWORD, entry.data.get(CONF_PASSWORD, "2n"))
-    relay_count = entry.data[CONF_RELAY_COUNT]
-    button_count = entry.data.get(CONF_BUTTON_COUNT, 0)
+    relay_count = int(entry.data.get(CONF_RELAY_COUNT, 0))
+    button_count = int(entry.data.get(CONF_BUTTON_COUNT, 0))
 
     view = TwoNRelayView(hass, entry, subpath, username, password, relay_count, button_count)
     hass.http.register_view(view)
