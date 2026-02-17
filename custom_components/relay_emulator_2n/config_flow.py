@@ -12,6 +12,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
+from . import async_cleanup_orphaned_entities
 from .const import (
     DOMAIN,
     CONF_SUBPATH,
@@ -138,6 +139,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             # Convert to int to handle float from NumberSelector
             relay_count = int(user_input[CONF_RELAY_COUNT])
             button_count = int(user_input[CONF_BUTTON_COUNT])
+            
+            # Clean up orphaned entities before updating and reloading
+            # This handles the case when users decrease relay/button counts
+            await async_cleanup_orphaned_entities(
+                self.hass,
+                self.config_entry,
+                relay_count,
+                button_count,
+            )
             
             # Update the entry
             self.hass.config_entries.async_update_entry(
