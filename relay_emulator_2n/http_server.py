@@ -1,5 +1,6 @@
 """HTTP server for 2N Relay Emulator with Digest Authentication."""
 import hashlib
+import hmac
 import logging
 import secrets
 import time
@@ -137,7 +138,8 @@ class DigestAuth:
         else:
             expected_response = hashlib.md5(f"{self.ha1}:{nonce}:{ha2}".encode()).hexdigest()
 
-        is_valid = response == expected_response
+        # Use constant-time comparison to prevent timing attacks
+        is_valid = hmac.compare_digest(response, expected_response)
         
         if not is_valid:
             _LOGGER.warning(
@@ -181,10 +183,9 @@ class TwoNRelayView(HomeAssistantView):
         async def wrapper(request: web.Request, path: str = "") -> web.Response:
             auth_header = request.headers.get("Authorization")
             
-            # Reconstruct the URI for digest auth
-            uri = f"/{self.subpath}/{path}"
-            if request.query_string:
-                uri += f"?{request.query_string}"
+            # Use the exact relative URL from the request for digest auth verification
+            # This ensures the URI matches exactly what the client sent, preventing auth bypass
+            uri = str(request.rel_url)
             
             if not auth_header or not self.auth.verify_response(
                 auth_header, request.method, uri
@@ -209,9 +210,8 @@ class TwoNRelayView(HomeAssistantView):
         """Route request to appropriate handler."""
         # Apply authentication
         auth_header = request.headers.get("Authorization")
-        uri = f"/{self.subpath}/{path}"
-        if request.query_string:
-            uri += f"?{request.query_string}"
+        # Use the exact relative URL from the request for digest auth verification
+        uri = str(request.rel_url)
         
         if not auth_header or not self.auth.verify_response(
             auth_header, request.method, uri
@@ -455,6 +455,17 @@ async def setup_http_server(hass: HomeAssistant, entry: ConfigEntry):
     relay_count = int(entry.data.get(CONF_RELAY_COUNT, 0))
     button_count = int(entry.data.get(CONF_BUTTON_COUNT, 0))
 
+    # Check if a view for this subpath already exists (e.g., after reload)
+    # This prevents duplicate route registration
+    if HTTP_SERVER_KEY in hass.data[DOMAIN]:
+        existing_view = hass.data[DOMAIN][HTTP_SERVER_KEY].get(entry.entry_id)
+        if existing_view:
+            _LOGGER.debug(
+                "HTTP server for %s already registered, skipping duplicate registration",
+                entry.entry_id
+            )
+            return
+
     view = TwoNRelayView(hass, entry, subpath, username, password, relay_count, button_count)
     hass.http.register_view(view)
 
@@ -472,11 +483,31 @@ async def setup_http_server(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def cleanup_http_server(hass: HomeAssistant, entry: ConfigEntry):
-    """Clean up the HTTP server."""
-    # Note: HomeAssistantView doesn't provide an unregister method
-    # The view will be automatically cleaned up when HA restarts
-    # We just remove it from our tracking
-    if HTTP_SERVER_KEY in hass.data[DOMAIN]:
-        if entry.entry_id in hass.data[DOMAIN][HTTP_SERVER_KEY]:
-            del hass.data[DOMAIN][HTTP_SERVER_KEY][entry.entry_id]
-            _LOGGER.info("2N Relay Emulator view removed from tracking")
+    """Clean up the HTTP server.
+    
+    Note: HomeAssistantView provides no official unregister mechanism. The route
+    will remain registered until Home Assistant restarts. Our tracking data is
+    cleaned up to prevent memory leaks in hass.data, and duplicate registration
+    is prevented via setup_http_server checks.
+    """
+    try:
+        # Clean up our tracking data
+        if HTTP_SERVER_KEY in hass.data[DOMAIN]:
+            view = hass.data[DOMAIN][HTTP_SERVER_KEY].pop(entry.entry_id, None)
+            
+            if view:
+                _LOGGER.warning(
+                    "2N Relay Emulator '%s' unloaded. HTTP route will remain active "
+                    "until Home Assistant restart due to framework limitations. "
+                    "No new duplicate routes will be registered on reload.",
+                    view.subpath
+                )
+            else:
+                _LOGGER.debug("No HTTP view found to clean up for %s", entry.entry_id)
+        
+        # Clean up empty tracking dict
+        if HTTP_SERVER_KEY in hass.data[DOMAIN] and not hass.data[DOMAIN][HTTP_SERVER_KEY]:
+            del hass.data[DOMAIN][HTTP_SERVER_KEY]
+            
+    except Exception as err:
+        _LOGGER.error("Error during HTTP server cleanup: %s", err)

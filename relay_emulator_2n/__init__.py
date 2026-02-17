@@ -33,13 +33,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # Clean up HTTP server
-    await cleanup_http_server(hass, entry)
+    # Clean up HTTP server first (before unloading platforms)
+    # This ensures the HTTP view is removed as early as possible
+    try:
+        await cleanup_http_server(hass, entry)
+    except Exception as err:
+        _LOGGER.error("Error cleaning up HTTP server: %s", err)
+        # Continue with platform unload even if HTTP cleanup fails
 
     # Unload platforms
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    try:
+        unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    except Exception as err:
+        _LOGGER.error("Error unloading platforms: %s", err)
+        return False
 
+    # Clean up data storage
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        try:
+            hass.data[DOMAIN].pop(entry.entry_id, None)
+        except Exception as err:
+            _LOGGER.error("Error cleaning up data storage: %s", err)
+            # Still return unload_ok since platforms were successfully unloaded
 
     return unload_ok

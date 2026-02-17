@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo
 
-from .const import DOMAIN, CONF_BUTTON_COUNT
+from .const import DOMAIN, VERSION, CONF_BUTTON_COUNT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class RelayButton(ButtonEntity):
             name=f"IP Relay Emulator for 2N (/{entry.data['subpath']})",
             manufacturer="Home Assistant",
             model="IP Relay Emulator for 2N",
-            sw_version="2.1.0",
+            sw_version=VERSION,
         )
 
     @property
