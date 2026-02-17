@@ -67,6 +67,19 @@ class RelayButton(ButtonEntity):
             base_url = get_url(self.hass, allow_internal=False, allow_external=True) or get_url(
                 self.hass, allow_internal=True
             )
+            
+            # If URL is None, Home Assistant might not be fully configured yet
+            if not base_url:
+                _LOGGER.debug(
+                    "Cannot generate button URLs for button %d: get_url() returned None. "
+                    "This typically means Home Assistant URL is not configured yet.",
+                    self._button_num,
+                )
+                return {
+                    "button_number": self._button_num,
+                    "error": "Home Assistant URL not configured",
+                }
+            
             subpath = self._entry.data.get("subpath", "2n-relay")
             
             return {
@@ -75,8 +88,11 @@ class RelayButton(ButtonEntity):
                 "button_status_url": f"{base_url}/api/{subpath}/button/status?button={self._button_num}",
             }
         except Exception as err:
-            _LOGGER.warning("Error generating button URLs: %s", err)
+            _LOGGER.exception(
+                "Unexpected error generating button URLs for button %d",
+                self._button_num,
+            )
             return {
                 "button_number": self._button_num,
-                "error": "Could not generate URLs",
+                "error": f"Error: {type(err).__name__}",
             }

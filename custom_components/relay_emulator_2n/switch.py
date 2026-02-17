@@ -68,6 +68,19 @@ class RelaySwitch(SwitchEntity):
             base_url = get_url(self.hass, allow_internal=False, allow_external=True) or get_url(
                 self.hass, allow_internal=True
             )
+            
+            # If URL is None, Home Assistant might not be fully configured yet
+            if not base_url:
+                _LOGGER.debug(
+                    "Cannot generate relay URLs for relay %d: get_url() returned None. "
+                    "This typically means Home Assistant URL is not configured yet.",
+                    self._relay_num,
+                )
+                return {
+                    "relay_number": self._relay_num,
+                    "error": "Home Assistant URL not configured",
+                }
+            
             subpath = self._entry.data.get("subpath", "2n-relay")
             
             return {
@@ -77,10 +90,13 @@ class RelaySwitch(SwitchEntity):
                 "relay_status_url": f"{base_url}/api/{subpath}/relay/status?relay={self._relay_num}",
             }
         except Exception as err:
-            _LOGGER.warning("Error generating relay URLs: %s", err)
+            _LOGGER.exception(
+                "Unexpected error generating relay URLs for relay %d",
+                self._relay_num,
+            )
             return {
                 "relay_number": self._relay_num,
-                "error": "Could not generate URLs",
+                "error": f"Error: {type(err).__name__}",
             }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
