@@ -1,7 +1,7 @@
 """Constants for the IP Relay Emulator for 2N integration."""
 
 DOMAIN = "relay_emulator_2n"
-VERSION = "3.0.0"
+VERSION = "3.1.0"
 
 # Configuration keys
 CONF_SUBPATH = "subpath"
