@@ -1,7 +1,7 @@
 {
   "domain": "relay_emulator_2n",
   "name": "IP Relay Emulator for 2N",
-  "version": "2.3.0",
+  "version": "3.0.0",
   "documentation": "https://github.com/moritzj29/relay-emulator-2n",
   "issues": "https://github.com/moritzj29/relay-emulator-2n/issues",
   "requirements": [],
