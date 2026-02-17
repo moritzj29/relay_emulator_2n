@@ -1,6 +1,6 @@
 import hashlib
 import time
-from relay_emulator_2n.http_server import DigestAuth, NONCE_EXPIRY_SECONDS
+from custom_components.relay_emulator_2n.http_server import DigestAuth, NONCE_EXPIRY_SECONDS
 
 
 def extract_nonce_from_challenge(challenge: str) -> str:

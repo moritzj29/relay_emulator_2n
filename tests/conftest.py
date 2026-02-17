@@ -3,7 +3,7 @@ import types
 from enum import Enum
 
 # Minimal Home Assistant shim to allow importing the integration without HA installed
-# This must be loaded before any test imports from relay_emulator_2n
+# This must be loaded before any test imports from custom_components.relay_emulator_2n
 
 # Create module hierarchy
 homeassistant = types.ModuleType("homeassistant")

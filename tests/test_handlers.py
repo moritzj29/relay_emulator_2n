@@ -3,7 +3,7 @@ import asyncio
 import pytest
 from types import SimpleNamespace
 
-from relay_emulator_2n.http_server import RelayView2N
+from custom_components.relay_emulator_2n.http_server import RelayView2N
 
 
 class DummyServices:
