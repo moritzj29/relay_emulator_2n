@@ -2,6 +2,8 @@
 
 A Home Assistant custom component that emulates a 2N IP relay unit, providing HTTP endpoints compatible with 2N access control units (intercoms, door readers, etc.). This allows you to replace physical 2N IP relays with virtual ones controlled by Home Assistant.
 
+Disclaimer: This projet is not associated with 2N Telekomunikace a.s. in any way. Code & documentation generation was assisted by AI agents. Use at your own risk.
+
 ## Features
 
 - **Drop-in replacement** for 2N IP relay units
@@ -11,22 +13,22 @@ A Home Assistant custom component that emulates a 2N IP relay unit, providing HT
 - **Relays and Buttons supported** (0-16 relays and 0-16 buttons per instance)
 - **Multiple instances** - run multiple emulators on different subpaths
 
-### Comparison to existing solutions
+## Comparison to existing solutions
 
-#### 2N API / custom components
+### 2N API / custom components
 
 Custom components exist which implement the 2N HTTP API, e.g.
 
 - https://github.com/SVD-NL/helios2n-hass
 - https://github.com/genka13/ha-2n-intercom
 
-While using the official HTTP API is of course the best way to control the device, it has limitations in registering events in real-time. So far the above components need to actively query the device log to check for state changes. This may result in some delay until events are reflected in the Home Assistant entities.
+While using the official HTTP API is of course the best way to control the device, it has limitations in registering events in real-time. So far the above components need to actively query the device log to check for state changes. This may result in some delay until events are reflected in Home Assistant.
 
-Alternatively the 2N devices are able to actively send HTTP requests for e.g. relay activation or via automation (`SendHTTPRequest`).
+Alternatively the 2N devices are able to actively send HTTP requests. E.g. for relay activation or via automation (`SendHTTPRequest`).
 
 **This integration does not poll the 2N device but provides an endpoint which the 2N device can trigger directly.**
 
-#### Home Assistant Webhooks
+### Home Assistant Webhooks
 
 Using the 2N Automation feature and the `SendHTTPRequest` function it is possible to trigger Home Assistant webhooks. Home Assistant webhooks are "protected" only by a randomized endpoint URL (security by obscurity). While this may be sufficient for many use cases, for access control you probably strive for some more protection.
 
@@ -69,6 +71,21 @@ The emulator provides the following 2N-compatible endpoints under your configure
 All endpoints support HTTP Digest Authentication as expected by 2N devices.
 
 ## Installation
+
+### HACS Installation (Recommended)
+
+1. Ensure [HACS](https://hacs.xyz/) is installed in your Home Assistant instance
+2. Open HACS → **Integrations**
+3. Click the three-dot menu (⋮) in the top right
+4. Select **Custom repositories**
+5. Add this repository:
+   - **Repository URL**: `https://github.com/moritzj29/relay-emulator-2n`
+   - **Category**: `Integration`
+6. Click **Create**
+7. Now search for "IP Relay Emulator for 2N" in HACS
+8. Click on the integration and select **Install**
+9. Restart Home Assistant
+10. Go to **Settings** → **Devices & Services** and search for "IP Relay Emulator for 2N"
 
 ### Manual Installation
 

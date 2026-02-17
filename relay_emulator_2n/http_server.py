@@ -1,4 +1,4 @@
-"""HTTP server for 2N Relay Emulator with Digest Authentication."""
+"""HTTP server for 2N Relay Emulation with Digest Authentication."""
 import hashlib
 import hmac
 import logging
@@ -13,6 +13,7 @@ from homeassistant.components.http import HomeAssistantView
 
 from .const import (
     DOMAIN,
+    VERSION,
     CONF_SUBPATH,
     CONF_USERNAME,
     CONF_PASSWORD,
@@ -150,7 +151,7 @@ class DigestAuth:
         return is_valid
 
 
-class TwoNRelayView(HomeAssistantView):
+class RelayView2N(HomeAssistantView):
     """HTTP View that emulates 2N IP relay endpoints."""
 
     requires_auth = False  # We handle digest auth ourselves
@@ -429,7 +430,7 @@ class TwoNRelayView(HomeAssistantView):
         """
         info = {
             "model": "IP Relay Emulator for 2N",
-            "version": "2.1.0",
+            "version": VERSION,
             "relays": self.relay_count,
             "buttons": self.button_count,
         }
@@ -466,7 +467,7 @@ async def setup_http_server(hass: HomeAssistant, entry: ConfigEntry):
             )
             return
 
-    view = TwoNRelayView(hass, entry, subpath, username, password, relay_count, button_count)
+    view = RelayView2N(hass, entry, subpath, username, password, relay_count, button_count)
     hass.http.register_view(view)
 
     # Store view instance for cleanup
