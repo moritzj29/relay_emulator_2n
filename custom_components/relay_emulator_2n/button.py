@@ -36,6 +36,7 @@ class RelayButton(ButtonEntity):
     """Representation of a button (momentary trigger)."""
 
     _attr_has_entity_name = True
+    _attr_available = True
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, button_num: int) -> None:
         """Initialize the relay button."""
@@ -59,21 +60,23 @@ class RelayButton(ButtonEntity):
         )
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return True
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity-specific state attributes."""
-        # Get base URL
-        base_url = get_url(self.hass, allow_internal=False, allow_external=True) or get_url(
-            self.hass, allow_internal=True
-        )
-        subpath = self._entry.data.get("subpath", "2n-relay")
-        
-        return {
-            "button_number": self._button_num,
-            "button_trigger_url": f"{base_url}/api/{subpath}/button/trigger?button={self._button_num}",
-            "button_status_url": f"{base_url}/api/{subpath}/button/status?button={self._button_num}",
-        }
+        try:
+            # Get base URL
+            base_url = get_url(self.hass, allow_internal=False, allow_external=True) or get_url(
+                self.hass, allow_internal=True
+            )
+            subpath = self._entry.data.get("subpath", "2n-relay")
+            
+            return {
+                "button_number": self._button_num,
+                "button_trigger_url": f"{base_url}/api/{subpath}/button/trigger?button={self._button_num}",
+                "button_status_url": f"{base_url}/api/{subpath}/button/status?button={self._button_num}",
+            }
+        except Exception as err:
+            _LOGGER.warning("Error generating button URLs: %s", err)
+            return {
+                "button_number": self._button_num,
+                "error": "Could not generate URLs",
+            }

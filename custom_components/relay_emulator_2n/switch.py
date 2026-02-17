@@ -36,6 +36,7 @@ class RelaySwitch(SwitchEntity):
     """Representation of a relay switch."""
 
     _attr_has_entity_name = True
+    _attr_available = True
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, relay_num: int) -> None:
         """Initialize the relay switch."""
@@ -60,25 +61,27 @@ class RelaySwitch(SwitchEntity):
         )
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return True
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity-specific state attributes."""
-        # Get base URL
-        base_url = get_url(self.hass, allow_internal=False, allow_external=True) or get_url(
-            self.hass, allow_internal=True
-        )
-        subpath = self._entry.data.get("subpath", "2n-relay")
-        
-        return {
-            "relay_number": self._relay_num,
-            "relay_on_url": f"{base_url}/api/{subpath}/relay/ctrl?relay={self._relay_num}&value=on",
-            "relay_off_url": f"{base_url}/api/{subpath}/relay/ctrl?relay={self._relay_num}&value=off",
-            "relay_status_url": f"{base_url}/api/{subpath}/relay/status?relay={self._relay_num}",
-        }
+        try:
+            # Get base URL
+            base_url = get_url(self.hass, allow_internal=False, allow_external=True) or get_url(
+                self.hass, allow_internal=True
+            )
+            subpath = self._entry.data.get("subpath", "2n-relay")
+            
+            return {
+                "relay_number": self._relay_num,
+                "relay_on_url": f"{base_url}/api/{subpath}/relay/ctrl?relay={self._relay_num}&value=on",
+                "relay_off_url": f"{base_url}/api/{subpath}/relay/ctrl?relay={self._relay_num}&value=off",
+                "relay_status_url": f"{base_url}/api/{subpath}/relay/status?relay={self._relay_num}",
+            }
+        except Exception as err:
+            _LOGGER.warning("Error generating relay URLs: %s", err)
+            return {
+                "relay_number": self._relay_num,
+                "error": "Could not generate URLs",
+            }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the relay on."""
