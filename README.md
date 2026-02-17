@@ -12,6 +12,7 @@ Disclaimer: This projet is not associated with 2N Telekomunikace a.s. in any way
 - **HTTP Digest Authentication** compatible with 2N devices
 - **Relays and Buttons supported** (0-16 relays and 0-16 buttons per instance)
 - **Multiple instances** - run multiple emulators on different subpaths
+- **URL Copy Feature** - easily get endpoint URLs for integration with other systems via HTTP endpoint or Home Assistant service
 
 ## Comparison to existing solutions
 
@@ -67,6 +68,15 @@ The emulator provides the following 2N-compatible endpoints under your configure
 
 ### System Information
 - `GET /{subpath}/api/system/info` - Returns system information
+
+### URL Generation (Get endpoint URLs for copy/paste)
+- `GET /{subpath}/api/get_urls` - Get all relay and button endpoint URLs
+- `GET /{subpath}/api/get_urls?relay=1` - Get URLs for specific relay
+- `GET /{subpath}/api/get_urls?button=1` - Get URLs for specific button
+
+Also available as Home Assistant service: `relay_emulator_2n.get_endpoint_url`
+
+See [URL_COPY_FEATURE.md](URL_COPY_FEATURE.md) for detailed documentation.
 
 All endpoints support HTTP Digest Authentication as expected by 2N devices.
 

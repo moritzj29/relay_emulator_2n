@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.network import get_url
 
 from .const import DOMAIN, VERSION, CONF_BUTTON_COUNT
 
@@ -26,7 +27,7 @@ async def async_setup_entry(
     if button_count > 0:
         entities = []
         for button_num in range(1, button_count + 1):
-            entities.append(RelayButton(entry, button_num))
+            entities.append(RelayButton(hass, entry, button_num))
 
         async_add_entities(entities)
 
@@ -36,8 +37,9 @@ class RelayButton(ButtonEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, entry: ConfigEntry, button_num: int) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, button_num: int) -> None:
         """Initialize the relay button."""
+        self.hass = hass
         self._entry = entry
         self._button_num = button_num
         
@@ -61,8 +63,17 @@ class RelayButton(ButtonEntity):
         """Return True if entity is available."""
         return True
 
-    async def async_press(self, **kwargs: Any) -> None:
-        """Handle the button press."""
-        _LOGGER.info("Button %d pressed", self._button_num)
-        # Button press event is automatically fired by Home Assistant
-        # No state to maintain - buttons are stateless
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return entity-specific state attributes."""
+        # Get base URL
+        base_url = get_url(self.hass, allow_internal=False, allow_external=True) or get_url(
+            self.hass, allow_internal=True
+        )
+        subpath = self._entry.data.get("subpath", "2n-relay")
+        
+        return {
+            "button_number": self._button_num,
+            "button_trigger_url": f"{base_url}/api/{subpath}/button/trigger?button={self._button_num}",
+            "button_status_url": f"{base_url}/api/{subpath}/button/status?button={self._button_num}",
+        }

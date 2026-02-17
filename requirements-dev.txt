@@ -1,4 +1,12 @@
-pytest
-pytest-asyncio
-aiohttp
-requests
+# Testing and development dependencies
+
+# Testing frameworks
+pytest>=9.0.0          # Test runner
+pytest-asyncio>=1.3.0  # Async test support
+
+# HTTP and async support
+aiohttp>=3.9.0         # Async HTTP client/server (used in http_server.py)
+requests>=2.31.0       # HTTP client library (used in test_relay.py)
+
+# Configuration validation
+voluptuous>=0.13.0     # Config schema validation (used in config_flow.py)
