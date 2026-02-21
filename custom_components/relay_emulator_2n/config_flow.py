@@ -166,7 +166,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             # Reload the integration
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             
-            return self.async_create_entry(title="", data={})
+            # Return options payload as well. In OptionsFlow, returning empty data
+            # can cause HA to overwrite options with {} after this method exits.
+            return self.async_create_entry(
+                title="",
+                data={
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                },
+            )
 
         # Get current values with safe defaults
         current_subpath = self.config_entry.data.get(CONF_SUBPATH, DEFAULT_SUBPATH)
@@ -202,4 +209,3 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
-

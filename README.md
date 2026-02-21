@@ -76,8 +76,6 @@ The emulator provides the following 2N-compatible endpoints under your configure
 
 Also available as Home Assistant service: `relay_emulator_2n.get_endpoint_url`
 
-See [URL_COPY_FEATURE.md](URL_COPY_FEATURE.md) for detailed documentation.
-
 All endpoints support HTTP Digest Authentication as expected by 2N devices.
 
 ## Installation
