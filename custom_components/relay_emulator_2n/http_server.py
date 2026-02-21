@@ -254,6 +254,17 @@ class RelayView2N(HomeAssistantView):
         self.url = f"/{self.subpath}/{{path:.*}}"
         self.name = f"2n_relay_emulator:{entry.entry_id}"
 
+    def _log_auth_failure(self, request: web.Request, reason: str) -> None:
+        """Log digest auth failure with instance and path context."""
+        _LOGGER.warning(
+            "Digest auth failed (%s) for instance=%s subpath='/%s' request_path='%s' from=%s",
+            reason,
+            self.entry.entry_id,
+            self.subpath,
+            request.path_qs,
+            request.remote,
+        )
+
     def require_auth(self, handler):
         """Decorator to require digest authentication."""
 
@@ -264,9 +275,14 @@ class RelayView2N(HomeAssistantView):
             # This ensures the URI matches exactly what the client sent, preventing auth bypass
             uri = str(request.rel_url)
             
-            if not auth_header or not self.auth.verify_response(
-                auth_header, request.method, uri
-            ):
+            if not auth_header:
+                self._log_auth_failure(request, "missing_authorization_header")
+                response = web.Response(status=401, text="Unauthorized")
+                response.headers["WWW-Authenticate"] = self.auth.create_challenge()
+                return response
+
+            if not self.auth.verify_response(auth_header, request.method, uri):
+                self._log_auth_failure(request, "invalid_digest_response")
                 response = web.Response(status=401, text="Unauthorized")
                 response.headers["WWW-Authenticate"] = self.auth.create_challenge()
                 return response
@@ -290,9 +306,14 @@ class RelayView2N(HomeAssistantView):
         # Use the exact relative URL from the request for digest auth verification
         uri = str(request.rel_url)
         
-        if not auth_header or not self.auth.verify_response(
-            auth_header, request.method, uri
-        ):
+        if not auth_header:
+            self._log_auth_failure(request, "missing_authorization_header")
+            response = web.Response(status=401, text="Unauthorized")
+            response.headers["WWW-Authenticate"] = self.auth.create_challenge()
+            return response
+
+        if not self.auth.verify_response(auth_header, request.method, uri):
+            self._log_auth_failure(request, "invalid_digest_response")
             response = web.Response(status=401, text="Unauthorized")
             response.headers["WWW-Authenticate"] = self.auth.create_challenge()
             return response
