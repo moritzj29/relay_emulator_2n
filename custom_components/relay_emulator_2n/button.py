@@ -84,8 +84,8 @@ class RelayButton(ButtonEntity):
             
             return {
                 "button_number": self._button_num,
-                "button_trigger_url": f"{base_url}/api/{subpath}/button/trigger?button={self._button_num}",
-                "button_status_url": f"{base_url}/api/{subpath}/button/status?button={self._button_num}",
+                "button_trigger_url": f"{base_url}/{subpath}/api/button/trigger?button={self._button_num}",
+                "button_status_url": f"{base_url}/{subpath}/api/button/status?button={self._button_num}",
             }
         except Exception as err:
             _LOGGER.exception(

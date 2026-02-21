@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.4] - 2026-02-21
+
+### Fixed
+- corrected generated endpoint URL paths from `/api/{subpath}/...` to `/{subpath}/api/...` to prevent 404 on newly configured instances
+
 ## [3.1.3] - 2026-02-21
 
 ### Fixed

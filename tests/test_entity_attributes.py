@@ -41,6 +41,9 @@ async def test_relay_switch_attributes():
     
     # Verify values
     assert attrs["relay_number"] == 1
+    assert "/2n-relay/api/relay/ctrl" in attrs["relay_on_url"]
+    assert "/2n-relay/api/relay/ctrl" in attrs["relay_off_url"]
+    assert "/2n-relay/api/relay/status" in attrs["relay_status_url"]
     assert "relay/ctrl?relay=1&value=on" in attrs["relay_on_url"]
     assert "relay/ctrl?relay=1&value=off" in attrs["relay_off_url"]
     assert "relay/status?relay=1" in attrs["relay_status_url"]
@@ -81,6 +84,7 @@ async def test_relay_switch_attributes_custom_subpath():
     assert "custom-relay-path" in attrs["relay_on_url"]
     assert "custom-relay-path" in attrs["relay_off_url"]
     assert "custom-relay-path" in attrs["relay_status_url"]
+    assert "/custom-relay-path/api/relay/ctrl" in attrs["relay_on_url"]
 
 
 @pytest.mark.asyncio
@@ -105,6 +109,8 @@ async def test_button_attributes():
     
     # Verify values
     assert attrs["button_number"] == 1
+    assert "/2n-relay/api/button/trigger" in attrs["button_trigger_url"]
+    assert "/2n-relay/api/button/status" in attrs["button_status_url"]
     assert "button/trigger?button=1" in attrs["button_trigger_url"]
     assert "button/status?button=1" in attrs["button_status_url"]
 
@@ -142,6 +148,7 @@ async def test_button_attributes_custom_subpath():
     
     assert "relay-control" in attrs["button_trigger_url"]
     assert "relay-control" in attrs["button_status_url"]
+    assert "/relay-control/api/button/trigger" in attrs["button_trigger_url"]
 
 
 @pytest.mark.asyncio

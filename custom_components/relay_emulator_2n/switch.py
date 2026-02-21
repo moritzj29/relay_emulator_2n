@@ -85,9 +85,9 @@ class RelaySwitch(SwitchEntity):
             
             return {
                 "relay_number": self._relay_num,
-                "relay_on_url": f"{base_url}/api/{subpath}/relay/ctrl?relay={self._relay_num}&value=on",
-                "relay_off_url": f"{base_url}/api/{subpath}/relay/ctrl?relay={self._relay_num}&value=off",
-                "relay_status_url": f"{base_url}/api/{subpath}/relay/status?relay={self._relay_num}",
+                "relay_on_url": f"{base_url}/{subpath}/api/relay/ctrl?relay={self._relay_num}&value=on",
+                "relay_off_url": f"{base_url}/{subpath}/api/relay/ctrl?relay={self._relay_num}&value=off",
+                "relay_status_url": f"{base_url}/{subpath}/api/relay/status?relay={self._relay_num}",
             }
         except Exception as err:
             _LOGGER.exception(
