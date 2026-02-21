@@ -29,6 +29,82 @@ NONCE_EXPIRY_SECONDS = 300  # 5 minutes
 MAX_NONCE_CACHE_SIZE = 1000  # Prevent memory exhaustion
 
 
+def _find_registered_resource(hass: HomeAssistant, view: HomeAssistantView):
+    """Find the aiohttp resource for a registered HomeAssistantView."""
+    app = getattr(getattr(hass, "http", None), "app", None)
+    if app is None:
+        return None
+
+    router = getattr(app, "router", None)
+    if router is None:
+        return None
+
+    try:
+        named_resources = router.named_resources()
+        if view.name in named_resources:
+            return named_resources[view.name]
+    except Exception:
+        pass
+
+    try:
+        for resource in router.resources():
+            if getattr(resource, "name", None) == view.name:
+                return resource
+            info = resource.get_info()
+            if info.get("formatter") == view.url:
+                return resource
+    except Exception:
+        pass
+
+    return None
+
+
+def _unregister_view_from_router(hass: HomeAssistant, view: HomeAssistantView) -> bool:
+    """Best-effort removal of a previously registered HomeAssistantView route."""
+    app = getattr(getattr(hass, "http", None), "app", None)
+    if app is None:
+        return False
+
+    router = getattr(app, "router", None)
+    if router is None:
+        return False
+
+    resource = _find_registered_resource(hass, view)
+    if resource is None:
+        return False
+
+    removed = False
+
+    resources = getattr(router, "_resources", None)
+    if isinstance(resources, list):
+        while resource in resources:
+            resources.remove(resource)
+            removed = True
+
+    named_resources = getattr(router, "_named_resources", None)
+    if isinstance(named_resources, dict):
+        for name, named_resource in list(named_resources.items()):
+            if named_resource is resource:
+                del named_resources[name]
+                removed = True
+
+    resource_index = getattr(router, "_resource_index", None)
+    if isinstance(resource_index, dict):
+        for key, indexed in list(resource_index.items()):
+            if indexed is resource:
+                del resource_index[key]
+                removed = True
+                continue
+            if isinstance(indexed, list):
+                while resource in indexed:
+                    indexed.remove(resource)
+                    removed = True
+                if not indexed:
+                    del resource_index[key]
+
+    return removed
+
+
 class DigestAuth:
     """Handle HTTP Digest Authentication compatible with 2N devices."""
 
@@ -456,23 +532,23 @@ async def setup_http_server(hass: HomeAssistant, entry: ConfigEntry):
     relay_count = int(entry.data.get(CONF_RELAY_COUNT, 0))
     button_count = int(entry.data.get(CONF_BUTTON_COUNT, 0))
 
-    # Check if a view for this subpath already exists (e.g., after reload)
-    # This prevents duplicate route registration
-    if HTTP_SERVER_KEY in hass.data[DOMAIN]:
-        existing_view = hass.data[DOMAIN][HTTP_SERVER_KEY].get(entry.entry_id)
-        if existing_view:
-            _LOGGER.debug(
-                "HTTP server for %s already registered, skipping duplicate registration",
-                entry.entry_id
-            )
-            return
+    # Ensure tracking structure exists.
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(HTTP_SERVER_KEY, {})
+
+    # If this entry already has a view, replace it to ensure route changes are
+    # applied immediately when the config entry reloads.
+    existing_view = hass.data[DOMAIN][HTTP_SERVER_KEY].get(entry.entry_id)
+    if existing_view:
+        if _unregister_view_from_router(hass, existing_view):
+            _LOGGER.debug("Removed existing route for %s before re-register", entry.entry_id)
+        else:
+            _LOGGER.debug("No existing route found to remove for %s", entry.entry_id)
 
     view = RelayView2N(hass, entry, subpath, username, password, relay_count, button_count)
     hass.http.register_view(view)
 
     # Store view instance for cleanup
-    if HTTP_SERVER_KEY not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][HTTP_SERVER_KEY] = {}
     hass.data[DOMAIN][HTTP_SERVER_KEY][entry.entry_id] = view
 
     _LOGGER.info(
@@ -486,29 +562,33 @@ async def setup_http_server(hass: HomeAssistant, entry: ConfigEntry):
 async def cleanup_http_server(hass: HomeAssistant, entry: ConfigEntry):
     """Clean up the HTTP server.
     
-    Note: HomeAssistantView provides no official unregister mechanism. The route
-    will remain registered until Home Assistant restarts. Our tracking data is
-    cleaned up to prevent memory leaks in hass.data, and duplicate registration
-    is prevented via setup_http_server checks.
+    HomeAssistantView has no public unregister API, so this uses best-effort
+    removal from aiohttp router internals to allow seamless route updates on
+    config entry reload without restarting Home Assistant.
     """
     try:
-        # Clean up our tracking data
-        if HTTP_SERVER_KEY in hass.data[DOMAIN]:
-            view = hass.data[DOMAIN][HTTP_SERVER_KEY].pop(entry.entry_id, None)
-            
-            if view:
-                _LOGGER.warning(
-                    "2N Relay Emulator '%s' unloaded. HTTP route will remain active "
-                    "until Home Assistant restart due to framework limitations. "
-                    "No new duplicate routes will be registered on reload.",
-                    view.subpath
-                )
+        domain_data = hass.data.get(DOMAIN, {})
+        http_views = domain_data.get(HTTP_SERVER_KEY)
+        if isinstance(http_views, dict):
+            view = http_views.pop(entry.entry_id, None)
+        else:
+            view = None
+
+        if view:
+            removed = _unregister_view_from_router(hass, view)
+            if removed:
+                _LOGGER.info("2N Relay Emulator route '/%s' removed", view.subpath)
             else:
-                _LOGGER.debug("No HTTP view found to clean up for %s", entry.entry_id)
+                _LOGGER.warning(
+                    "Unable to fully remove route '/%s'; stale paths may persist until restart",
+                    view.subpath,
+                )
+        else:
+            _LOGGER.debug("No HTTP view found to clean up for %s", entry.entry_id)
         
         # Clean up empty tracking dict
-        if HTTP_SERVER_KEY in hass.data[DOMAIN] and not hass.data[DOMAIN][HTTP_SERVER_KEY]:
-            del hass.data[DOMAIN][HTTP_SERVER_KEY]
+        if isinstance(http_views, dict) and not http_views:
+            del domain_data[HTTP_SERVER_KEY]
             
     except Exception as err:
         _LOGGER.error("Error during HTTP server cleanup: %s", err)
